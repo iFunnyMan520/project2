@@ -1,0 +1,27 @@
+Gets all posts from database
+Gets all posts from database
+---
+definitions:
+  Post:
+    type: object
+    properties:
+      id:
+        type: integer
+      title:
+        type: string
+      likes:
+        type: integer
+
+  Posts:
+    type: object
+    properties:
+      posts:
+        type: array
+        items:
+          $ref: '#/definitions/Post'
+
+responses:
+  200:
+    description: A list of all posts
+    schema:
+      $ref: '#/definitions/Posts'
