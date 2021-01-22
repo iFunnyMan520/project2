@@ -7,5 +7,4 @@ from api.posts.models import Posts
 class UserView(SwaggerView):
 
     def get(self):
-
         return 'Ok'
