@@ -19,7 +19,7 @@ def test_create_user():
 def test_create_the_same_user():
     new_user = create_new_user(email=email, password=password)
 
-    assert new_user == 'User already exists'
+    assert new_user is None
 
 
 def test_check_user():
@@ -65,3 +65,47 @@ def test_get_user_by_username():
 
     assert user_by_username is None
 
+
+def test_get_users_by_first_name():
+    user1 = Users(first_name=first_name, email='test1')
+    user2 = Users(first_name=first_name, email='test2')
+    user1.save()
+    user2.save()
+
+    users = [user1, user2]
+
+    get_users = get_users_by_first_name(first_name=first_name)
+
+    assert users == get_users
+
+    user1.delete()
+    user2.delete()
+
+    assert get_users_by_first_name(first_name=first_name) is None
+
+
+def test_get_users_by_last_name():
+    user1 = Users(last_name=last_name, email='test1')
+    user2 = Users(last_name=last_name, email='test2')
+    user1.save()
+    user2.save()
+
+    users = [user1, user2]
+
+    get_users = get_users_by_last_name(last_name=last_name)
+
+    assert users == get_users
+
+    user1.delete()
+    user2.delete()
+
+    assert get_users_by_last_name(last_name=last_name) is None
+
+
+def test_get_user_by_id():
+    new_user = create_new_user(email=email, password=password)
+    user = get_user_by_id(id=new_user.pk)
+
+    assert user == new_user
+
+    new_user.delete()

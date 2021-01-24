@@ -1,7 +1,11 @@
+from typing import List
+
+from bson import ObjectId
+
 from .models import Users
 
 
-def create_new_user(email: str, password: str) -> Users or str:
+def create_new_user(email: str, password: str) -> Users or None:
     """
     Creates a new user with a hashed password and adds it to the database
     :param email: user email
@@ -9,12 +13,17 @@ def create_new_user(email: str, password: str) -> Users or str:
     :return: user model or information that the user already exists
     """
     if Users.objects(email=email):
-        return 'User already exists'
+        return None
 
     user = Users.create_user(email, password)
     user.save()
 
     return user
+
+
+def add_user_avatar():
+    # TODO create a function to add user avatar
+    pass
 
 
 def check_user(email: str, password: str) -> Users or None:
@@ -59,22 +68,56 @@ def add_data_to_user(user: Users,
     return user
 
 
-def get_users_by_first_name():
-    # TODO create a function that return a list of users with the same first
-    #  name
-    pass
+def get_users_by_first_name(first_name: str) -> List[Users] or None:
+    """
+    Gets all users with the same first name
+    :param first_name: sent first name
+    :return: list of users or None
+    """
+    users_list = []
+    users = Users.objects(first_name=first_name)
+
+    if not users:
+        return None
+
+    for user in users:
+        users_list.append(user)
+
+    return users_list
 
 
-def get_users_by_last_name():
-    # TODO create a function that return a list of users with the same last
-    #  name
-    pass
+def get_users_by_last_name(last_name: str) -> List[Users] or None:
+    """
+    Gets all users with the same last name
+    :param last_name: sent last name
+    :return: list of users or None
+    """
+    users_list = []
+    users = Users.objects(last_name=last_name)
+
+    if not users:
+        return None
+
+    for user in users:
+        users_list.append(user)
+
+    return users_list
+
+
+def get_user_by_id(id: ObjectId) -> Users or None:
+    """
+    Gets user by id
+    :param id: sent id
+    :return: user or None
+    """
+    user = Users.objects(pk=id).first()
+    return user
 
 
 def get_user_by_email(email: str) -> Users or None:
     """
     Gets user by email
-    :param email:
+    :param email: sent email
     :return: user with received email or None if that user doesn't exist
     """
     user = Users.objects(email=email).first()
@@ -84,7 +127,7 @@ def get_user_by_email(email: str) -> Users or None:
 def get_user_by_username(username: str) -> Users or None:
     """
     Gets user by username
-    :param username:
+    :param username: sent username
     :return: user with received username or None if that user doesn't exist
     """
     user = Users.objects(username=username).first()
