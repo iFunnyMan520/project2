@@ -81,7 +81,7 @@ def get_users_by_first_name(first_name: str) -> List[Users] or None:
         return None
 
     for user in users:
-        users_list.append(user)
+        users_list.append(user.to_json())
 
     return users_list
 
@@ -99,7 +99,7 @@ def get_users_by_last_name(last_name: str) -> List[Users] or None:
         return None
 
     for user in users:
-        users_list.append(user)
+        users_list.append(user.to_json())
 
     return users_list
 
@@ -132,3 +132,87 @@ def get_user_by_username(username: str) -> Users or None:
     """
     user = Users.objects(username=username).first()
     return user
+
+
+def get_followers(user: Users) -> List[Users] or None:
+    """
+    Gets all users following current user
+    :param: current user
+    :return: list of users
+    """
+    _id = user.pk
+    users = Users.objects(followed__followed=_id)
+
+    if not users:
+        return None
+
+    users_list = []
+    for user in users:
+        users_list.append(user.to_json())
+
+    return users_list
+
+
+def subscribe(user: Users, id: ObjectId) -> Users or None:
+    """
+    Subscribes the current user on the user with sent id
+    :param user: current user
+    :param id: user id to which current user will be subscribed
+    :return: user or None if user with sent id doesn't exist or is already
+    subscribed
+    """
+    followed = get_user_by_id(id=id)
+    if not followed:
+        return None
+
+    user.followed.followed.add_followed(id=id)
+    user.save()
+
+    # TODO if user is already subscribed, return user
+
+    followed.followers.followers.add_follower(id=user.pk)
+    followed.save()
+
+    return user
+
+
+def unsubscribe(user: Users, id: ObjectId) -> Users or None:
+    """
+    Unsubscribes the current user on the user with sent id
+    :param user: current user
+    :param id: user id to which current user will be unsubscribed
+    :return: user or None if user with sent id doesn't exist or is not
+    subscribed
+    """
+    follower = get_user_by_id(id=id)
+    if not follower:
+        return None
+
+    user.followed.followed.delete_followed(id=id)
+    user.save()
+
+    # TODO if user is not subscribed, return user
+
+    follower.followers.followers.delete_follower(id=user.pk)
+    follower.save()
+
+    return user
+
+
+def get_followed(user: Users) -> List[Users] or None:
+    """
+    Gets all users followed current user
+    :param: current user
+    :return: list of users
+    """
+    _id = user.pk
+    users = Users.objects(followers__followers=_id)
+
+    if not users:
+        return None
+
+    users_list = []
+    for user in users:
+        users_list.append(user.to_json())
+
+    return users_list

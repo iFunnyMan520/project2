@@ -72,7 +72,7 @@ def test_get_users_by_first_name():
     user1.save()
     user2.save()
 
-    users = [user1, user2]
+    users = [user1.to_json(), user2.to_json()]
 
     get_users = get_users_by_first_name(first_name=first_name)
 
@@ -90,7 +90,7 @@ def test_get_users_by_last_name():
     user1.save()
     user2.save()
 
-    users = [user1, user2]
+    users = [user1.to_json(), user2.to_json()]
 
     get_users = get_users_by_last_name(last_name=last_name)
 
@@ -109,3 +109,17 @@ def test_get_user_by_id():
     assert user == new_user
 
     new_user.delete()
+
+
+def test_followers():
+    user1 = create_new_user(email='useremail1', password='userpassword1')
+    user2 = create_new_user(email='useremail2', password='userpassword2')
+    user3 = create_new_user(email='useremail3', password='userpassword3')
+
+    user1 = subscribe(user=user1, id=user2.id)
+    user1 = subscribe(user=user1, id=user3.id)
+    user3 = subscribe(user=user3, id=user1.id)
+
+    # TODO finish this test
+
+

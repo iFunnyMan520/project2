@@ -69,7 +69,7 @@ class Users(db.Document):
             '_id': str(self.pk),
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'username': '@' + self.username,
+            'username': self.username,
             'email': self.email,
             'followers': self.followers,
             'followed': self.followed

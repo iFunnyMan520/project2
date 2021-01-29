@@ -8,11 +8,11 @@ from .utils import *
 class UsersView(SwaggerView):
 
     def get(self):
-        response = Users.objects()
-        users = []
-        for user in response:
-            users.append(user.to_json())
-        return jsonify({'users': users})
+        users = Users.objects()
+        users_array = []
+        for user in users:
+            users_array.append(user.to_json())
+        return jsonify({'users': users_array})
 
     def post(self):
         response = request.get_json()
@@ -62,14 +62,54 @@ class UserByIdView(SwaggerView):
 
         return updated_user.to_json(), 200
 
+    def delete(self, id: str):
+        _id = ObjectId(id)
+        user = get_user_by_id(id=_id)
+
+        if not user:
+            return 'User could not be found', 404
+
+        user.delete()
+
+        return 'User has been deleted'
+
 
 class UserByUsernameView(SwaggerView):
-    pass
+
+    def get(self, username: str):
+        user = get_user_by_username(username=username)
+
+        if not user:
+            return 'User could not be found', 404
+
+        return jsonify(user.to_json())
 
 
 class UsersByFirstNameView(SwaggerView):
-    pass
+
+    def get(self, first_name: str):
+        users = get_users_by_first_name(first_name=first_name)
+
+        if not users:
+            return 'Users could not be found', 404
+
+        return jsonify({'users': users})
 
 
 class UsersByLastNameView(SwaggerView):
+
+    def get(self, last_name: str):
+        users = get_users_by_last_name(last_name=last_name)
+
+        if not users:
+            return 'Users could not be found', 404
+
+        return jsonify({'users': users})
+
+
+class FollowersView(SwaggerView):
+    pass
+
+
+class FollowedView(SwaggerView):
     pass
