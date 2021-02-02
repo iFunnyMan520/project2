@@ -5,18 +5,21 @@ from api.users.models import Users
 
 
 class Comments(db.EmbeddedDocument):
-    # TODO create model for comments
-    pass
+    """
+    TODO create model for comments
+    """
 
 
 class Picture(db.EmbeddedDocument):
-    # TODO create model for picture
-    pass
+    """
+    TODO create model for picture
+    """
 
 
 class Likes(db.EmbeddedDocument):
-    # TODO create model for likes
-    pass
+    """
+    TODO create model for likes
+    """
 
 
 class Posts(db.Document):

@@ -5,22 +5,6 @@ from bson import ObjectId
 from .models import Users
 
 
-def create_new_user(email: str, password: str) -> Users or None:
-    """
-    Creates a new user with a hashed password and adds it to the database
-    :param email: user email
-    :param password: user password to be hashed
-    :return: user model or information that the user already exists
-    """
-    if Users.objects(email=email):
-        return None
-
-    user = Users.create_user(email, password)
-    user.save()
-
-    return user
-
-
 def add_user_avatar():
     # TODO create a function to add user avatar
     pass

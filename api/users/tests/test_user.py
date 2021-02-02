@@ -1,125 +1,118 @@
-from api.users.utils import *
+from bson import ObjectId
+
+from api import client
+from api.users.models import Users
+
+email = 'test_email'
+password = 'test_password'
+first_name = 'test_first_name'
+username = 'test_username'
+last_name = 'test_last_name'
+user_id = ObjectId(b'test_user_id')
 
 
-email = 'test_email@gmail.com'
-password = 'test123'
-first_name = 'Test first name'
-last_name = 'Test last name'
-username = 'test username'
+def test_get_users():
+    response = client.get('/api/v1.0/users/')
+
+    users = Users.objects()
+    users_array = []
+    for user in users:
+        users_array.append(user.to_json())
+
+    assert response.status_code == 200
+    assert {'users': users_array} == response.get_json()
 
 
-def test_create_user():
-    new_user = create_new_user(email=email, password=password)
-    user = get_user_by_email(email=email)
+def test_add_user():
+    response = client.post('/api/v1.0/users/', json={
+        'emails': email,
+        'password': password
+    })
 
-    assert new_user.email == user.email
-    assert new_user.password == user.password
+    assert response.status_code == 400
+    assert response.data == b'Invalid data'
 
+    response = client.post('/api/v1.0/users/', json={
+        'email': email,
+        'password': password
+    })
 
-def test_create_the_same_user():
-    new_user = create_new_user(email=email, password=password)
+    assert response.status_code == 201
+    assert response.data == b'User has been created'
 
-    assert new_user is None
+    response = client.post('/api/v1.0/users/', json={
+        'email': email,
+        'password': password
+    })
 
-
-def test_check_user():
-    user = get_user_by_email(email=email)
-    user1 = check_user(email=email, password=password)
-
-    assert user.email == user1.email
-    assert user.password == user1.password
-
-    user2 = check_user(email=email, password='test')
-
-    assert user2 is None
-
-    user3 = check_user(email='test', password=password)
-
-    assert user3 is None
-
-
-def test_add_data():
-    user = get_user_by_email(email=email)
-    modified_user = add_data_to_user(user=user, first_name=first_name,
-                                     last_name=last_name, username=username)
-
-    same_user = get_user_by_email(email=email)
-
-    assert modified_user.email == same_user.email
-    assert modified_user.first_name == same_user.first_name
-    assert modified_user.last_name == same_user.last_name
-    assert modified_user.username == same_user.username
-
-
-def test_get_user_by_username():
-    user_by_username = get_user_by_username(username=username)
-    user = get_user_by_email(email=email)
-
-    assert user_by_username.email == user.email
-    assert user_by_username.first_name == user.first_name
-    assert user_by_username.last_name == user.last_name
-    assert user_by_username.username == user.username
-
-    user.delete()
-    user_by_username = get_user_by_username(username=username)
-
-    assert user_by_username is None
-
-
-def test_get_users_by_first_name():
-    user1 = Users(first_name=first_name, email='test1')
-    user2 = Users(first_name=first_name, email='test2')
-    user1.save()
-    user2.save()
-
-    users = [user1.to_json(), user2.to_json()]
-
-    get_users = get_users_by_first_name(first_name=first_name)
-
-    assert users == get_users
-
-    user1.delete()
-    user2.delete()
-
-    assert get_users_by_first_name(first_name=first_name) is None
-
-
-def test_get_users_by_last_name():
-    user1 = Users(last_name=last_name, email='test1')
-    user2 = Users(last_name=last_name, email='test2')
-    user1.save()
-    user2.save()
-
-    users = [user1.to_json(), user2.to_json()]
-
-    get_users = get_users_by_last_name(last_name=last_name)
-
-    assert users == get_users
-
-    user1.delete()
-    user2.delete()
-
-    assert get_users_by_last_name(last_name=last_name) is None
+    assert response.status_code == 401
+    assert response.data == b'User already exists'
 
 
 def test_get_user_by_id():
-    new_user = create_new_user(email=email, password=password)
-    user = get_user_by_id(id=new_user.pk)
+    user = Users.objects(email=email).first()
 
-    assert user == new_user
+    _id = str(user.pk)
+    response = client.get(f'/api/v1.0/users/id={_id}')
 
-    new_user.delete()
+    assert response.status_code == 200
+    assert response.get_json() == user.to_json()
 
+    response = client.get(f'/api/v1.0/users/id={user_id}')
 
-def test_followers():
-    user1 = create_new_user(email='useremail1', password='userpassword1')
-    user2 = create_new_user(email='useremail2', password='userpassword2')
-    user3 = create_new_user(email='useremail3', password='userpassword3')
-
-    user1 = subscribe(user=user1, id=user2.id)
-    user1 = subscribe(user=user1, id=user3.id)
-    user3 = subscribe(user=user3, id=user1.id)
-
-    # TODO finish this test
+    assert response.status_code == 404
+    assert response.data == b'User could not be found'
 
 
+def test_add_new_data():
+    user = Users.objects(email=email).first()
+
+    _id = str(user.pk)
+    response = client.put(f'/api/v1.0/users/id={_id}', json={
+        'first_name': first_name,
+        'username': username,
+        'last_name': last_name
+    })
+
+    user = Users.objects(email=email).first()
+
+    assert response.status_code == 200
+    assert response.get_json() == user.to_json()
+
+    response = client.put(f'/api/v1.0/users/id={user_id}', json={
+        'first_name': first_name,
+        'username': username,
+        'last_name': last_name
+    })
+
+    assert response.data == b'User could not be found'
+    assert response.status_code == 404
+
+    response = client.put(f'/api/v1.0/users/id={_id}', json={
+        'first_names': first_name,
+        'username': username,
+        'last_name': last_name
+    })
+
+    assert response.data == b'Invalid data'
+    assert response.status_code == 400
+
+
+def test_delete_user():
+    user = Users.objects(email=email).first()
+
+    _id = str(user.pk)
+
+    response = client.delete(f'/api/v1.0/users/id={_id}')
+
+    assert response.data == b'User has been deleted'
+    assert response.status_code == 200
+
+    response = client.delete(f'/api/v1.0/users/id={user_id}')
+
+    assert response.data == b'User could not be found'
+    assert response.status_code == 404
+
+    user = Users.objects(email=email).first()
+
+    assert user is None

@@ -1,7 +1,5 @@
 from flasgger import SwaggerView
 from flask import jsonify, request
-
-from .models import Users
 from .utils import *
 
 
@@ -19,11 +17,12 @@ class UsersView(SwaggerView):
         if 'email' not in response or 'password' not in response:
             return 'Invalid data', 400
 
-        user = create_new_user(email=response['email'],
-                               password=response['password'])
-
-        if not user:
+        if get_user_by_email(email=response['email']):
             return 'User already exists', 401
+
+        user = Users.create_user(email=response['email'],
+                                 password=response['password'])
+        user.save()
 
         return 'User has been created', 201
 
@@ -60,7 +59,7 @@ class UserByIdView(SwaggerView):
         if not updated_user:
             return 'Username is already taken', 401
 
-        return updated_user.to_json(), 200
+        return updated_user.to_json()
 
     def delete(self, id: str):
         _id = ObjectId(id)
@@ -108,8 +107,12 @@ class UsersByLastNameView(SwaggerView):
 
 
 class FollowersView(SwaggerView):
-    pass
+    """
+    TODO create view for followers
+    """
 
 
 class FollowedView(SwaggerView):
-    pass
+    """
+    TODO create view for followed
+    """

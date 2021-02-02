@@ -4,8 +4,9 @@ from api import db
 
 
 class Avatar(db.EmbeddedDocument):
-    # TODO create model for avatar
-    pass
+    """
+    TODO create model for avatar
+    """
 
 
 class Followers(db.EmbeddedDocument):
