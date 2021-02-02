@@ -13,12 +13,12 @@ class Followers(db.EmbeddedDocument):
     qty = db.IntField(default=0)
     followers = db.ListField(db.ObjectIdField(), default=[])
 
-    def add_follower(self, id: ObjectId):
-        self.followers.append(id)
+    def add_follower(self, _id: ObjectId):
+        self.followers.append(_id)
         self.qty += 1
 
-    def delete_follower(self, id: ObjectId):
-        self.followers.remove(id)
+    def delete_follower(self, _id: ObjectId):
+        self.followers.remove(_id)
         self.qty -= 1
 
 
@@ -26,11 +26,11 @@ class Followed(db.EmbeddedDocument):
     qty = db.IntField(default=0)
     followed = db.ListField(db.ObjectIdField(), default=[])
 
-    def add_followed(self, id: ObjectId):
+    def add_followed(self, _id: ObjectId):
         self.followed.append(id)
         self.qty += 1
 
-    def delete_followed(self, id: ObjectId):
+    def delete_followed(self, _id: ObjectId):
         self.followed.remove(id)
         self.qty -= 1
 

@@ -88,13 +88,13 @@ def get_users_by_last_name(last_name: str) -> List[Users] or None:
     return users_list
 
 
-def get_user_by_id(id: ObjectId) -> Users or None:
+def get_user_by_id(_id: ObjectId) -> Users or None:
     """
     Gets user by id
-    :param id: sent id
+    :param _id: sent id
     :return: user or None
     """
-    user = Users.objects(pk=id).first()
+    user = Users.objects(pk=_id).first()
     return user
 
 
@@ -137,15 +137,15 @@ def get_followers(user: Users) -> List[Users] or None:
     return users_list
 
 
-def subscribe(user: Users, id: ObjectId) -> Users or None:
+def subscribe(user: Users, _id: ObjectId) -> Users or None:
     """
     Subscribes the current user on the user with sent id
     :param user: current user
-    :param id: user id to which current user will be subscribed
+    :param _id: user id to which current user will be subscribed
     :return: user or None if user with sent id doesn't exist or is already
     subscribed
     """
-    followed = get_user_by_id(id=id)
+    followed = get_user_by_id(_id=_id)
     if not followed:
         return None
 
@@ -160,19 +160,19 @@ def subscribe(user: Users, id: ObjectId) -> Users or None:
     return user
 
 
-def unsubscribe(user: Users, id: ObjectId) -> Users or None:
+def unsubscribe(user: Users, _id: ObjectId) -> Users or None:
     """
     Unsubscribes the current user on the user with sent id
     :param user: current user
-    :param id: user id to which current user will be unsubscribed
+    :param _id: user id to which current user will be unsubscribed
     :return: user or None if user with sent id doesn't exist or is not
     subscribed
     """
-    follower = get_user_by_id(id=id)
+    follower = get_user_by_id(_id=_id)
     if not follower:
         return None
 
-    user.followed.followed.delete_followed(id=id)
+    user.followed.followed.delete_followed(id=_id)
     user.save()
 
     # TODO if user is not subscribed, return user

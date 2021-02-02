@@ -3,6 +3,30 @@ from flask import jsonify, request
 from .utils import *
 
 
+class UserLogin(SwaggerView):
+    """
+    TODO create login with token
+    """
+
+
+class UserSignUp(SwaggerView):
+    """
+    TODO create user registration with token
+    """
+
+
+class Me(SwaggerView):
+    """
+    TODO create view for logged user
+    """
+
+
+class UserLogOut(SwaggerView):
+    """
+    TODO create view for logout logged user
+    """
+
+
 class UsersView(SwaggerView):
 
     def get(self):
@@ -31,7 +55,7 @@ class UserByIdView(SwaggerView):
 
     def get(self, id: str):
         _id = ObjectId(id)
-        user = get_user_by_id(id=_id)
+        user = get_user_by_id(_id=_id)
 
         if not user:
             return 'User could not be found', 404
@@ -46,7 +70,7 @@ class UserByIdView(SwaggerView):
             return 'Invalid data', 400
 
         _id = ObjectId(id)
-        user = get_user_by_id(id=_id)
+        user = get_user_by_id(_id=_id)
 
         if not user:
             return 'User could not be found', 404
@@ -63,7 +87,7 @@ class UserByIdView(SwaggerView):
 
     def delete(self, id: str):
         _id = ObjectId(id)
-        user = get_user_by_id(id=_id)
+        user = get_user_by_id(_id=_id)
 
         if not user:
             return 'User could not be found', 404
