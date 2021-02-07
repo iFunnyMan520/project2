@@ -3,40 +3,18 @@ from flask import jsonify, request
 from .utils import *
 
 
-class UserLogin(SwaggerView):
+class UserLoginView(SwaggerView):
     """
-    TODO create login with token
-    """
-
-
-class UserSignUp(SwaggerView):
-    """
-    TODO create user registration with token
+    TODO create login view
     """
 
 
-class Me(SwaggerView):
-    """
-    TODO create view for logged user
-    """
-
-
-class UserLogOut(SwaggerView):
-    """
-    TODO create view for logout logged user
-    """
-
-
-class UsersView(SwaggerView):
-
-    def get(self):
-        users = Users.objects()
-        users_array = []
-        for user in users:
-            users_array.append(user.to_json())
-        return jsonify({'users': users_array})
+class UserSignUpView(SwaggerView):
 
     def post(self):
+        """
+        file: docs/post/sign_up.yml
+        """
         response = request.get_json()
         if 'email' not in response or 'password' not in response:
             return 'Invalid data', 400
@@ -48,7 +26,77 @@ class UsersView(SwaggerView):
                                  password=response['password'])
         user.save()
 
-        return 'User has been created', 201
+        return jsonify({'token': user.auth_token})
+
+
+class MeView(SwaggerView):
+
+    def get(self):
+        response = request.get_json()
+
+        if 'token' not in response:
+            return 'Invalid data', 400
+
+        user = check_token(token=response['token'])
+
+        if not user:
+            return 'User could not be found', 404
+
+        return jsonify(user.to_json())
+
+    def put(self):
+        response = request.get_json()
+
+        if 'username' not in response or 'first_name' not in response or \
+                'last_name' not in response or 'token' not in response:
+            return 'Invalid data', 400
+
+        user_check = check_token(token=response['token'])
+
+        if not user_check:
+            return 'User could not be found', 404
+
+        user = add_data_to_user(user=user_check,
+                                first_name=response['first_name'],
+                                last_name=response['last_name'],
+                                username=response['username'])
+
+        return jsonify(user.to_json())
+
+    def delete(self):
+        response = request.get_json()
+
+        if 'token' not in response:
+            return 'Invalid data', 400
+
+        user = check_token(token=response['token'])
+
+        if not user:
+            return 'User could not be found', 404
+
+        user.delete()
+
+        return 'User has been deleted'
+
+
+class UserLogOutView(SwaggerView):
+    """
+    TODO create view for logout logged user
+    """
+
+
+class UsersView(SwaggerView):
+
+    def get(self):
+        users = Users.objects()
+        users_array = []
+
+        if not users:
+            return 'Users cannot be found', 404
+
+        for user in users:
+            users_array.append(user.to_json())
+        return jsonify({'users': users_array})
 
 
 class UserByIdView(SwaggerView):
@@ -61,40 +109,6 @@ class UserByIdView(SwaggerView):
             return 'User could not be found', 404
 
         return jsonify(user.to_json())
-
-    def put(self, id: str):
-        response = request.get_json()
-
-        if 'first_name' not in response or 'username' not in response or \
-                'last_name' not in response:
-            return 'Invalid data', 400
-
-        _id = ObjectId(id)
-        user = get_user_by_id(_id=_id)
-
-        if not user:
-            return 'User could not be found', 404
-
-        updated_user = add_data_to_user(user=user,
-                                        first_name=response['first_name'],
-                                        last_name=response['last_name'],
-                                        username=response['username'])
-
-        if not updated_user:
-            return 'Username is already taken', 401
-
-        return updated_user.to_json()
-
-    def delete(self, id: str):
-        _id = ObjectId(id)
-        user = get_user_by_id(_id=_id)
-
-        if not user:
-            return 'User could not be found', 404
-
-        user.delete()
-
-        return 'User has been deleted'
 
 
 class UserByUsernameView(SwaggerView):

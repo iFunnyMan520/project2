@@ -10,6 +10,16 @@ def add_user_avatar():
     pass
 
 
+def check_token(token: str) -> Users or None:
+    """
+    Checks that one of Users has the sent token
+    :param token: sent token
+    :return: user with the sent token or None if user cannot be found
+    """
+    user = Users.objects(auth_token=token).first()
+    return user
+
+
 def check_user(email: str, password: str) -> Users or None:
     """
     Checks that the sent data is equal to the data in the database

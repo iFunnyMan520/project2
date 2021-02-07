@@ -6,6 +6,16 @@ app.add_url_rule('/api/v1.0/users/',
                  view_func=views.UsersView.as_view('users'))
 
 
+app.add_url_rule('/api/v1.0/users/signUp',
+                 view_func=views.UserSignUpView.as_view('signUp'),
+                 methods=['POST'])
+
+
+app.add_url_rule('/api/v1.0/users/me',
+                 view_func=views.MeView.as_view('me'),
+                 methods=['PUT', 'GET', 'DELETE'])
+
+
 app.add_url_rule('/api/v1.0/users/id=<string:id>',
                  view_func=views.UserByIdView.as_view('user_by_id'))
 

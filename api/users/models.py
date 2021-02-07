@@ -1,3 +1,5 @@
+import uuid
+
 from bson import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 from api import db
@@ -41,19 +43,22 @@ class Users(db.Document):
     username = db.StringField()
     email = db.StringField(unique=True)
     password = db.StringField()
-    followers = db.EmbeddedDocumentField(Followers)
-    followed = db.EmbeddedDocumentField(Followed)
+    auth_token = db.StringField()
+    followers = db.MapField(db.EmbeddedDocumentField(Followers))
+    followed = db.MapField(db.EmbeddedDocumentField(Followed))
 
     @classmethod
     def create_user(cls, email: str, password: str):
         """
-        Creates a user with a hashing password and adds its to the database
+        Creates a user with a hashing password, auth token and adds its to the
+        database
         :param email: sent email that adding to the database
         :param password: sent password that adding to the database
         :return: user model
         """
         hash_pass = generate_password_hash(password)
-        user = cls(email=email, password=hash_pass)
+        token = str(uuid.uuid4())
+        user = cls(email=email, password=hash_pass, auth_token=token)
         return user
 
     def check_pass(self, password):
