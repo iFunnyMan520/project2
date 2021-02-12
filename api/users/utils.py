@@ -2,7 +2,7 @@ from typing import List
 
 from bson import ObjectId
 
-from .models import Users
+from .models import Users, Followed, Followers
 
 
 def add_user_avatar():
@@ -41,7 +41,7 @@ def check_user(email: str, password: str) -> Users or None:
 def add_data_to_user(user: Users,
                      first_name: str = None,
                      last_name: str = None,
-                     username: str = None) -> Users or None:
+                     username: str = None) -> Users:
     """
     Adds new data to user
     :param user: user model
@@ -50,9 +50,6 @@ def add_data_to_user(user: Users,
     :param username: username
     :return: user model with new data
     """
-
-    if get_user_by_username(username):
-        return None
 
     user.first_name = first_name
     user.last_name = last_name
@@ -147,24 +144,34 @@ def get_followers(user: Users) -> List[Users] or None:
     return users_list
 
 
-def subscribe(user: Users, _id: ObjectId) -> Users or None:
+def subscribe(user: Users, followed: Users) -> Users or None:
     """
     Subscribes the current user on the user with sent id
     :param user: current user
-    :param _id: user id to which current user will be subscribed
+    :param followed: user to which current user will be subscribed
     :return: user or None if user with sent id doesn't exist or is already
     subscribed
     """
-    followed = get_user_by_id(_id=_id)
-    if not followed:
-        return None
 
-    user.followed.followed.add_followed(id=id)
+    if not user.followed:
+        follows = Followed()
+        follows.add_followed(_id=str(followed.pk))
+        user.followed = follows
+    else:
+        user.followed.add_followed(_id=str(followed.pk))
+
     user.save()
 
-    # TODO if user is already subscribed, return user
+    if followed.followers and str(user.pk) in followed.followers.followers:
+        return user
 
-    followed.followers.followers.add_follower(id=user.pk)
+    if not followed.followers:
+        follows = Followers()
+        follows.add_follower(_id=str(user.pk))
+        followed.followers = follows
+    else:
+        followed.followers.add_follower(_id=str(user.pk))
+
     followed.save()
 
     return user
@@ -185,7 +192,8 @@ def unsubscribe(user: Users, _id: ObjectId) -> Users or None:
     user.followed.followed.delete_followed(id=_id)
     user.save()
 
-    # TODO if user is not subscribed, return user
+    if not Users.objects(followers__followers=user.pk):
+        return user
 
     follower.followers.followers.delete_follower(id=user.pk)
     follower.save()

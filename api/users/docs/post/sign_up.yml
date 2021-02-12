@@ -1,0 +1,27 @@
+Sign Up
+Creates a new user and adds it to the database
+---
+tags:
+  - users
+
+parameters:
+  - name: body
+    in: body
+    description: user email and password
+    type: object
+    required: true
+    schema:
+      $ref: '#/definitions/SignUp'
+
+responses:
+  200:
+    description: Token for authenticating user
+    schema:
+      $ref: '#/definitions/Token'
+  400:
+    description: Invalid data
+  401:
+    description: User already exists
+
+definitions:
+  import: "docs/definitions/definitions.yml"

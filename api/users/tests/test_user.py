@@ -30,7 +30,7 @@ def test_get_users():
     assert {'users': users_array} == response.get_json()
 
 
-def test_me():
+def test_sign_up():
     response = client.post('/api/v1.0/users/signUp', json={
         'emails': email,
         'password': password
@@ -52,6 +52,7 @@ def test_me():
         'password': password
     })
 
+    global token
     token = response.get_json()['token']
 
     response = client.post('/api/v1.0/users/signUp', json={
@@ -61,6 +62,9 @@ def test_me():
 
     assert response.status_code == 401
     assert response.data == b'User already exists'
+
+
+def test_me():
 
     user_check = Users.objects(email=email).first()
 
@@ -100,6 +104,18 @@ def test_me():
     assert response.status_code == 200
     assert response.get_json() == user_check.to_json()
 
+    response = client.put('/api/v1.0/users/me', json={
+        'token': token,
+        'username': username,
+        'first_name': first_name,
+        'last_name': last_name
+    })
+
+    assert response.status_code == 200
+    assert response.get_json() == user_check.to_json()
+
+
+def test_delete_me():
     response = client.delete('/api/v1.0/users/me', json={
         'token': test_token
     })
@@ -115,3 +131,5 @@ def test_me():
 
     assert response.data == b'User has been deleted'
     assert user_check is None
+
+# TODO test login and logout views

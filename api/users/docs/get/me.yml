@@ -1,0 +1,5 @@
+About me
+Gets the user with the sent token and returns it
+---
+tags:
+  - users

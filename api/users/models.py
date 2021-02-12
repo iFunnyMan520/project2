@@ -1,6 +1,5 @@
 import uuid
 
-from bson import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 from api import db
 
@@ -13,27 +12,27 @@ class Avatar(db.EmbeddedDocument):
 
 class Followers(db.EmbeddedDocument):
     qty = db.IntField(default=0)
-    followers = db.ListField(db.ObjectIdField(), default=[])
+    followers = db.ListField(db.StringField())
 
-    def add_follower(self, _id: ObjectId):
+    def add_follower(self, _id: str):
         self.followers.append(_id)
         self.qty += 1
 
-    def delete_follower(self, _id: ObjectId):
+    def delete_follower(self, _id: str):
         self.followers.remove(_id)
         self.qty -= 1
 
 
 class Followed(db.EmbeddedDocument):
     qty = db.IntField(default=0)
-    followed = db.ListField(db.ObjectIdField(), default=[])
+    followed = db.ListField(db.StringField())
 
-    def add_followed(self, _id: ObjectId):
-        self.followed.append(id)
+    def add_followed(self, _id: str):
+        self.followed.append(_id)
         self.qty += 1
 
-    def delete_followed(self, _id: ObjectId):
-        self.followed.remove(id)
+    def delete_followed(self, _id: str):
+        self.followed.remove(_id)
         self.qty -= 1
 
 
@@ -44,8 +43,12 @@ class Users(db.Document):
     email = db.StringField(unique=True)
     password = db.StringField()
     auth_token = db.StringField()
-    followers = db.MapField(db.EmbeddedDocumentField(Followers))
-    followed = db.MapField(db.EmbeddedDocumentField(Followed))
+    followers = db.EmbeddedDocumentField(Followers)
+    followed = db.EmbeddedDocumentField(Followed)
+
+    @staticmethod
+    def generate_token():
+        return str(uuid.uuid4())
 
     @classmethod
     def create_user(cls, email: str, password: str):
@@ -57,7 +60,7 @@ class Users(db.Document):
         :return: user model
         """
         hash_pass = generate_password_hash(password)
-        token = str(uuid.uuid4())
+        token = cls.generate_token()
         user = cls(email=email, password=hash_pass, auth_token=token)
         return user
 

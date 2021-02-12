@@ -4,9 +4,25 @@ from .utils import *
 
 
 class UserLoginView(SwaggerView):
-    """
-    TODO create login view
-    """
+
+    def post(self):
+        response = request.get_json()
+        if 'email' not in response or 'password' not in response:
+            return 'Invalid data', 400
+
+        user = check_user(email=response['email'],
+                          password=response['password'])
+
+        if not user:
+            return 'Wrong email or password', 404
+
+        if user.auth_token:
+            return 'User is already logged in'
+
+        user.auth_token = Users.generate_token()
+        user.save()
+
+        return jsonify({'token': user.auth_token})
 
 
 class UserSignUpView(SwaggerView):
@@ -32,6 +48,9 @@ class UserSignUpView(SwaggerView):
 class MeView(SwaggerView):
 
     def get(self):
+        """
+        file: docs/get/me.yml
+        """
         response = request.get_json()
 
         if 'token' not in response:
@@ -55,6 +74,10 @@ class MeView(SwaggerView):
 
         if not user_check:
             return 'User could not be found', 404
+
+        if get_user_by_username(username=response['username']) and not \
+                user_check.username == response['username']:
+            return 'Username already exists', 401
 
         user = add_data_to_user(user=user_check,
                                 first_name=response['first_name'],
