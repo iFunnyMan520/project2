@@ -168,12 +168,71 @@ class UsersByLastNameView(SwaggerView):
 
 
 class FollowersView(SwaggerView):
-    """
-    TODO create view for followers
-    """
+
+    def get(self, id: str):
+        _id = ObjectId(id)
+        user = get_user_by_id(_id=_id)
+
+        if not user:
+            return 'User could not be found', 404
+
+        followers = get_followers(user=user)
+        return jsonify(followers)
 
 
 class FollowedView(SwaggerView):
-    """
-    TODO create view for followed
-    """
+
+    def get(self, id: str):
+        _id = ObjectId(id)
+        user = get_user_by_id(_id=_id)
+
+        if not user:
+            return 'User could not be found', 404
+
+        followed = get_followed(user=user)
+        return jsonify(followed)
+
+
+class MyFollowView(SwaggerView):
+
+    def post(self):
+        response = request.get_json()
+
+        if 'token' not in response or '_id' not in response:
+            return 'Invalid data', 400
+
+        user = check_token(token=response['token'])
+
+        if not user:
+            return 'User could not be found', 404
+
+        _id = ObjectId(response['_id'])
+        followed = get_user_by_id(_id=_id)
+
+        if not followed:
+            return 'User could not be found', 404
+
+        subscribe(user, followed)
+
+        return 'You have subscribed now', 200
+
+    def delete(self):
+        response = request.get_json()
+
+        if 'token' not in response or '_id' not in response:
+            return 'Invalid data', 400
+
+        user = check_token(token=response['token'])
+
+        if not user:
+            return 'User could not be found', 404
+
+        _id = ObjectId(response['_id'])
+        followed = get_user_by_id(_id=_id)
+
+        if not followed:
+            return 'User could not be found', 404
+
+        unsubscribe(user, followed)
+
+        return 'You have unsubscribed now', 200

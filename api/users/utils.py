@@ -144,13 +144,12 @@ def get_followers(user: Users) -> List[Users] or None:
     return users_list
 
 
-def subscribe(user: Users, followed: Users) -> Users or None:
+def subscribe(user: Users, followed: Users) -> Users:
     """
     Subscribes the current user on the user with sent id
     :param user: current user
     :param followed: user to which current user will be subscribed
-    :return: user or None if user with sent id doesn't exist or is already
-    subscribed
+    :return: user
     """
 
     if not user.followed:
@@ -177,26 +176,18 @@ def subscribe(user: Users, followed: Users) -> Users or None:
     return user
 
 
-def unsubscribe(user: Users, _id: ObjectId) -> Users or None:
+def unsubscribe(user: Users, followed: Users) -> Users:
     """
     Unsubscribes the current user on the user with sent id
     :param user: current user
-    :param _id: user id to which current user will be unsubscribed
-    :return: user or None if user with sent id doesn't exist or is not
-    subscribed
+    :param followed: user to which current user will be unsubscribed
+    :return: user
     """
-    follower = get_user_by_id(_id=_id)
-    if not follower:
-        return None
-
-    user.followed.followed.delete_followed(id=_id)
+    user.followed.delete_followed(_id=str(followed.pk))
     user.save()
 
-    if not Users.objects(followers__followers=user.pk):
-        return user
-
-    follower.followers.followers.delete_follower(id=user.pk)
-    follower.save()
+    followed.followers.delete_follower(_id=str(user.pk))
+    followed.save()
 
     return user
 

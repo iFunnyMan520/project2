@@ -16,6 +16,11 @@ app.add_url_rule('/api/v1.0/users/me',
                  methods=['PUT', 'GET', 'DELETE'])
 
 
+app.add_url_rule('/api/v1.0/users/me/follow',
+                 view_func=views.MyFollowView.as_view('my_follow'),
+                 methods=['POST', 'DELETE'])
+
+
 app.add_url_rule('/api/v1.0/users/id=<string:id>',
                  view_func=views.UserByIdView.as_view('user_by_id'))
 
@@ -33,3 +38,11 @@ app.add_url_rule('/api/v1.0/users/first_name=<string:first_name>',
 app.add_url_rule('/api/v1.0/users/last_name=<string:last_name>',
                  view_func=views.UsersByLastNameView.as_view(
                      'users_by_last_name'))
+
+
+app.add_url_rule('/api/v1.0/users/id=<string:id>/followers',
+                 view_func=views.FollowersView.as_view('followers'))
+
+
+app.add_url_rule('/api/v1.0/users/id=<string:id>/followed',
+                 view_func=views.FollowersView.as_view('followed'))
