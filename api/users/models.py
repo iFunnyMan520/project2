@@ -62,6 +62,7 @@ class Users(db.Document):
         hash_pass = generate_password_hash(password)
         token = cls.generate_token()
         user = cls(email=email, password=hash_pass, auth_token=token)
+        user.save()
         return user
 
     def check_pass(self, password):

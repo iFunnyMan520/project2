@@ -131,7 +131,7 @@ def get_followers(user: Users) -> List[Users] or None:
     :param: current user
     :return: list of users
     """
-    _id = user.pk
+    _id = str(user.pk)
     users = Users.objects(followed__followed=_id)
 
     if not users:
@@ -144,7 +144,7 @@ def get_followers(user: Users) -> List[Users] or None:
     return users_list
 
 
-def subscribe(user: Users, followed: Users) -> Users:
+def subscribe(user: Users, followed: Users) -> Users or None:
     """
     Subscribes the current user on the user with sent id
     :param user: current user
@@ -156,6 +156,8 @@ def subscribe(user: Users, followed: Users) -> Users:
         follows = Followed()
         follows.add_followed(_id=str(followed.pk))
         user.followed = follows
+    elif followed.followers and str(user.pk) in followed.followers.followers:
+        return None
     else:
         user.followed.add_followed(_id=str(followed.pk))
 
@@ -198,7 +200,7 @@ def get_followed(user: Users) -> List[Users] or None:
     :param: current user
     :return: list of users
     """
-    _id = user.pk
+    _id = str(user.pk)
     users = Users.objects(followers__followers=_id)
 
     if not users:

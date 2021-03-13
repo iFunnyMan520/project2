@@ -11,9 +11,19 @@ app.add_url_rule('/api/v1.0/users/signUp',
                  methods=['POST'])
 
 
+app.add_url_rule('/api/v1.0/users/logIn',
+                 view_func=views.UserLoginView.as_view('logIn'),
+                 methods=['POST'])
+
+
 app.add_url_rule('/api/v1.0/users/me',
                  view_func=views.MeView.as_view('me'),
                  methods=['PUT', 'GET', 'DELETE'])
+
+
+app.add_url_rule('/api/v1.0/users/me/logOut',
+                 view_func=views.UserLogOutView.as_view('logOut'),
+                 methods=['POST'])
 
 
 app.add_url_rule('/api/v1.0/users/me/follow',
@@ -45,4 +55,4 @@ app.add_url_rule('/api/v1.0/users/id=<string:id>/followers',
 
 
 app.add_url_rule('/api/v1.0/users/id=<string:id>/followed',
-                 view_func=views.FollowersView.as_view('followed'))
+                 view_func=views.FollowedView.as_view('followed'))
