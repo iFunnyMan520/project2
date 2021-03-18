@@ -36,7 +36,7 @@ class UserClient:
         })
 
     def me(self, token) -> Response:
-        return self.client.get('/api/v1.0/users/me', json={
+        return self.client.get('/api/v1.0/users/me', headers={
             'token': token
         })
 

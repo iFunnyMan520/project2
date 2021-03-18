@@ -1,4 +1,5 @@
 import uuid
+from typing import List
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from api import db
@@ -11,8 +12,8 @@ class Avatar(db.EmbeddedDocument):
 
 
 class Followers(db.EmbeddedDocument):
-    qty = db.IntField(default=0)
-    followers = db.ListField(db.StringField())
+    qty: int = db.IntField(default=0)
+    followers: List[str] = db.ListField(db.StringField())
 
     def add_follower(self, _id: str):
         self.followers.append(_id)
@@ -24,8 +25,8 @@ class Followers(db.EmbeddedDocument):
 
 
 class Followed(db.EmbeddedDocument):
-    qty = db.IntField(default=0)
-    followed = db.ListField(db.StringField())
+    qty: int = db.IntField(default=0)
+    followed: List[str] = db.ListField(db.StringField())
 
     def add_followed(self, _id: str):
         self.followed.append(_id)
@@ -37,21 +38,21 @@ class Followed(db.EmbeddedDocument):
 
 
 class Users(db.Document):
-    first_name = db.StringField()
-    last_name = db.StringField()
-    username = db.StringField()
-    email = db.StringField(unique=True)
-    password = db.StringField()
-    auth_token = db.StringField()
-    followers = db.EmbeddedDocumentField(Followers)
-    followed = db.EmbeddedDocumentField(Followed)
+    first_name: str = db.StringField()
+    last_name: str = db.StringField()
+    username: str = db.StringField()
+    email: str = db.StringField(unique=True)
+    password: str = db.StringField()
+    auth_token: str = db.StringField()
+    followers: 'Followers' = db.EmbeddedDocumentField(Followers)
+    followed: 'Followed' = db.EmbeddedDocumentField(Followed)
 
     @staticmethod
     def generate_token():
         return str(uuid.uuid4())
 
     @classmethod
-    def create_user(cls, email: str, password: str):
+    def create_user(cls, email: str, password: str) -> 'Users':
         """
         Creates a user with a hashing password, auth token and adds its to the
         database
@@ -65,7 +66,7 @@ class Users(db.Document):
         user.save()
         return user
 
-    def check_pass(self, password):
+    def check_pass(self, password) -> bool:
         """
         Checks if the sent password matches the password in the database
         :param password: sent password

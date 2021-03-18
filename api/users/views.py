@@ -2,6 +2,7 @@ from flasgger import SwaggerView
 from flask import jsonify, request
 from marshmallow import ValidationError
 from api.users import inputs
+from .decorators import only_authorized
 from .utils import *
 
 
@@ -50,21 +51,12 @@ class UserSignUpView(SwaggerView):
 
 class MeView(SwaggerView):
 
-    def get(self):
+    @only_authorized
+    def get(self, me: 'Users'):
         """
         file: docs/get/me.yml
         """
-        try:
-            response = inputs.TokenSchema().load(request.get_json())
-        except ValidationError as err:
-            return jsonify(err.messages), 400
-
-        user = check_token(token=response['token'])
-
-        if not user:
-            return jsonify({'message': 'User could not be found'}), 404
-
-        return jsonify(user.to_json())
+        return me.to_json()
 
     def put(self):
         try:
