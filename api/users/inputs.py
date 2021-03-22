@@ -6,15 +6,11 @@ class AuthSchema(Schema):
     password = fields.String(required=True)
 
 
-class TokenSchema(Schema):
-    token = fields.String(required=True)
-
-
-class UpdateMeSchema(TokenSchema):
+class UpdateMeSchema(Schema):
     username = fields.String(required=True)
     first_name = fields.String(required=True)
     last_name = fields.String(required=True)
 
 
-class FollowSchema(TokenSchema):
+class FollowSchema(Schema):
     _id = fields.String(required=True)

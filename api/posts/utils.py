@@ -3,9 +3,10 @@ from typing import List
 from bson import ObjectId
 
 from api.posts.models import Posts
+from api.users.models import Users
 
 
-def get_post_by_id(_id: str) -> dict or None:
+def get_post_by_id(_id: str) -> 'Posts' or None:
     """
     Gets post by its id
     :param _id: post id
@@ -13,15 +14,13 @@ def get_post_by_id(_id: str) -> dict or None:
     """
     post: 'Posts' = Posts.objects(_id=ObjectId(_id))
 
-    if not post:
-        return None
-
-    return post.to_json()
+    return post
 
 
-def posts_per_page(page: int, count: int) -> List[dict] or None:
+def posts_per_page(page: int, count: int, user: 'Users') -> List[dict] or None:
     """
     Gets posts on the page
+    :param user:
     :param page: number of page
     :param count: number of posts to be shown on the page
     :return: list of post dicts or None
@@ -37,6 +36,6 @@ def posts_per_page(page: int, count: int) -> List[dict] or None:
     posts_list = []
 
     for post in posts:
-        posts_list.append(post.to_json())
+        posts_list.append(post.to_json(user))
 
     return posts_list

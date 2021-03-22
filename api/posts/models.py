@@ -36,7 +36,7 @@ class Views(db.EmbeddedDocument):
 
 class Posts(db.Document):
     title: str = db.StringField()
-    description: str = db.StringField()
+    description: str = db.StringField(default='There is no description')
     author: 'Users' = db.ReferenceField(Users)
     tags: List[str] = db.ListField(db.StringField(), default=[])
     only_for_followers: bool = db.BooleanField(default=False)
@@ -56,9 +56,15 @@ class Posts(db.Document):
             return 0
         return len(self.views)
 
+    def is_liked(self, user: 'Users'):
+        return str(user.pk) in self.likes.likes
+
+    def is_viewed(self, user: 'Users'):
+        return str(user.pk) in self.views.views
+
     @classmethod
     def create(cls, title: str, author: Users, tags: List[str],
-               description: str, only_for_followers: bool = False):
+               description: str, only_for_followers: bool):
         post: 'Posts' = cls(title=title, author=author, tags=tags,
                             only_for_followers=only_for_followers,
                             description=description)
@@ -70,7 +76,7 @@ class Posts(db.Document):
         self.save()
 
     @staticmethod
-    def by_tag(tag: str) -> List[dict] or None:
+    def by_tag(tag: str, user: 'Users') -> List[dict] or None:
         posts: List['Posts'] = Posts.objects(tags=tag)
 
         if not posts:
@@ -79,20 +85,37 @@ class Posts(db.Document):
         posts_list = []
 
         for post in posts:
-            posts_list.append(post.to_json())
+            posts_list.append(post.to_json(user))
 
         return posts_list
 
     @staticmethod
-    def by_user(user: 'Users') -> List[dict] or None:
-        posts: List['Posts'] = Posts.objects(author=user)
+    def by_user(user: 'Users', current: 'Users') -> List[dict] or None:
+        posts: List['Posts'] = Posts.objects(author=user).order_by(
+            '-created_at')
         if not posts:
             return
 
         posts_list = []
 
         for post in posts:
-            posts_list.append(post.to_json())
+            posts_list.append(post.to_json(current))
+        return posts_list
+
+    @staticmethod
+    def my_followed_posts(current: 'Users'):
+        _id: str = str(current.pk)
+
+        posts: List['Posts'] = Posts.query(str(Posts.author.pk) in
+                                           current.followed.followed).order_by(
+            '-created_at'
+        )
+
+        posts_list = []
+
+        for post in posts:
+            posts_list.append(post.to_json(current))
+
         return posts_list
 
     def like_post(self, user: 'Users') -> 'Posts':
@@ -139,7 +162,7 @@ class Posts(db.Document):
 
         return self
 
-    def to_json(self):
+    def to_json(self, user: 'Users'):
         return {
             '_id': str(self.pk),
             'title': self.title,
@@ -150,5 +173,7 @@ class Posts(db.Document):
             'created_at': self.created_at,
             'user_likes': self.likes,
             'likes': self.likes,
+            'is_liked': self.is_liked(user),
+            'is_viewed': self.is_viewed(user),
             'views': self.views_count
         }

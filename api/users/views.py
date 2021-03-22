@@ -2,12 +2,14 @@ from flasgger import SwaggerView
 from flask import jsonify, request
 from marshmallow import ValidationError
 from api.users import inputs
-from .decorators import only_authorized
+from .decorators import only_authorized, with_secret_key
 from .utils import *
+from ..posts.models import Posts
 
 
 class UserLoginView(SwaggerView):
 
+    @with_secret_key
     def post(self):
         try:
             response = inputs.AuthSchema().load(request.get_json())
@@ -31,6 +33,7 @@ class UserLoginView(SwaggerView):
 
 class UserSignUpView(SwaggerView):
 
+    @with_secret_key
     def post(self):
         """
         file: docs/post/sign_up.yml
@@ -52,45 +55,33 @@ class UserSignUpView(SwaggerView):
 class MeView(SwaggerView):
 
     @only_authorized
-    def get(self, me: 'Users'):
+    def get(self, user: 'Users'):
         """
         file: docs/get/me.yml
         """
-        return me.to_json()
+        posts = Posts.by_user(user, user)
+        return jsonify({'me': user.to_json(), 'posts': posts})
 
-    def put(self):
+    @only_authorized
+    def put(self, user: 'Users'):
         try:
             response = inputs.UpdateMeSchema().load(request.get_json())
         except ValidationError as err:
             return jsonify(err.messages), 400
 
-        user_check = check_token(token=response['token'])
-
-        if not user_check:
-            return jsonify({'message': 'User could not be found'}), 404
-
         if get_user_by_username(username=response['username']) and not \
-                user_check.username == response['username']:
+                user.username == response['username']:
             return jsonify({'message': 'Username already exists'}), 401
 
-        user = add_data_to_user(user=user_check,
+        user = add_data_to_user(user=user,
                                 first_name=response['first_name'],
                                 last_name=response['last_name'],
                                 username=response['username'])
 
         return jsonify(user.to_json())
 
-    def delete(self):
-        try:
-            response = inputs.TokenSchema().load(request.get_json())
-        except ValidationError as err:
-            return jsonify(err.messages), 400
-
-        user = check_token(token=response['token'])
-
-        if not user:
-            return jsonify({'message': 'User could not be found'}), 404
-
+    @only_authorized
+    def delete(self, user: 'Users'):
         user.delete()
 
         return jsonify({'message': 'User has been deleted'})
@@ -98,16 +89,8 @@ class MeView(SwaggerView):
 
 class UserLogOutView(SwaggerView):
 
-    def post(self):
-        try:
-            response = inputs.TokenSchema().load(request.get_json())
-        except ValidationError as err:
-            return jsonify(err.messages), 400
-
-        user = check_token(token=response['token'])
-
-        if not user:
-            return jsonify({'message': 'User is not logged in'}), 401
+    @only_authorized
+    def post(self, user: 'Users'):
 
         user.auth_token = None
         user.save()
@@ -116,45 +99,49 @@ class UserLogOutView(SwaggerView):
 
 class UsersView(SwaggerView):
 
-    def get(self):
+    @only_authorized
+    def get(self, user: 'Users'):
         users = Users.objects()
         users_array = []
 
         if not users:
             return jsonify({'message': 'Users cannot be found'}), 404
 
-        for user in users:
-            users_array.append(user.to_json())
+        for each_user in users:
+            users_array.append(each_user.to_json(user))
         return jsonify({'users': users_array})
 
 
 class UserByIdView(SwaggerView):
 
-    def get(self, id: str):
+    @only_authorized
+    def get(self, id: str, user: 'Users'):
         _id = ObjectId(id)
-        user = get_user_by_id(_id=_id)
+        user_by_id = get_user_by_id(_id=_id)
 
-        if not user:
+        if not user_by_id:
             return jsonify({'message': 'User could not be found'}), 404
 
-        return jsonify(user.to_json())
+        return jsonify(user_by_id.to_json(user))
 
 
 class UserByUsernameView(SwaggerView):
 
-    def get(self, username: str):
-        user = get_user_by_username(username=username)
+    @only_authorized
+    def get(self, username: str, user: 'Users'):
+        user_by_username = get_user_by_username(username=username)
 
-        if not user:
+        if not user_by_username:
             return jsonify({'message': 'User could not be found'}), 404
 
-        return jsonify(user.to_json())
+        return jsonify(user_by_username.to_json(user))
 
 
 class UsersByFirstNameView(SwaggerView):
 
-    def get(self, first_name: str):
-        users = get_users_by_first_name(first_name=first_name)
+    @only_authorized
+    def get(self, first_name: str, user: 'Users'):
+        users = get_users_by_first_name(first_name=first_name, user=user)
 
         if not users:
             return jsonify({'message': 'Users could not be found'}), 404
@@ -164,8 +151,9 @@ class UsersByFirstNameView(SwaggerView):
 
 class UsersByLastNameView(SwaggerView):
 
-    def get(self, last_name: str):
-        users = get_users_by_last_name(last_name=last_name)
+    @only_authorized
+    def get(self, last_name: str, user: 'Users'):
+        users = get_users_by_last_name(last_name=last_name, user=user)
 
         if not users:
             return jsonify({'message': 'Users could not be found'}), 404
@@ -175,42 +163,40 @@ class UsersByLastNameView(SwaggerView):
 
 class FollowersView(SwaggerView):
 
-    def get(self, id: str):
+    @only_authorized
+    def get(self, id: str, user: 'Users'):
         _id = ObjectId(id)
-        user = get_user_by_id(_id=_id)
+        user_follow = get_user_by_id(_id=_id)
 
-        if not user:
+        if not user_follow:
             return jsonify({'message': 'User could not be found'}), 404
 
-        followers = get_followers(user=user)
+        followers = get_followers(user_follow=user_follow, user=user)
         return jsonify(followers)
 
 
 class FollowedView(SwaggerView):
 
-    def get(self, id: str):
+    @only_authorized
+    def get(self, id: str, user: 'Users'):
         _id = ObjectId(id)
-        user = get_user_by_id(_id=_id)
+        user_follow = get_user_by_id(_id=_id)
 
-        if not user:
+        if not user_follow:
             return jsonify({'message': 'User could not be found'}), 404
 
-        followed = get_followed(user=user)
+        followed = get_followed(user_follow=user_follow, user=user)
         return jsonify(followed)
 
 
 class MyFollowView(SwaggerView):
 
-    def post(self):
+    @only_authorized
+    def post(self, user: 'Users'):
         try:
             response = inputs.FollowSchema().load(request.get_json())
         except ValidationError as err:
             return jsonify(err.messages), 400
-
-        user = check_token(token=response['token'])
-
-        if not user:
-            return jsonify({'message': 'User is not logged in'}), 401
 
         _id = ObjectId(response['_id'])
         followed = get_user_by_id(_id=_id)
@@ -223,18 +209,14 @@ class MyFollowView(SwaggerView):
         if not sub:
             return jsonify({'message': 'You have already subscribed'})
 
-        return jsonify({'message': 'You have subscribed now'}), 200
+        return jsonify({'message': 'You have subscribed now'})
 
-    def delete(self):
+    @only_authorized
+    def delete(self, user: 'Users'):
         try:
             response = inputs.FollowSchema().load(request.get_json())
         except ValidationError as err:
             return jsonify(err.messages), 400
-
-        user = check_token(token=response['token'])
-
-        if not user:
-            return jsonify({'message': 'User is not logged in'}), 401
 
         _id = ObjectId(response['_id'])
         followed = get_user_by_id(_id=_id)
@@ -244,4 +226,4 @@ class MyFollowView(SwaggerView):
 
         unsubscribe(user, followed)
 
-        return jsonify({'message': 'You have unsubscribed now'}), 200
+        return jsonify({'message': 'You have unsubscribed now'})

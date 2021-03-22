@@ -59,9 +59,11 @@ def add_data_to_user(user: Users,
     return user
 
 
-def get_users_by_first_name(first_name: str) -> List[Users] or None:
+def get_users_by_first_name(first_name: str, user: 'Users') -> List[Users] \
+                                                               or None:
     """
     Gets all users with the same first name
+    :param user:
     :param first_name: sent first name
     :return: list of users or None
     """
@@ -72,14 +74,16 @@ def get_users_by_first_name(first_name: str) -> List[Users] or None:
         return None
 
     for user in users:
-        users_list.append(user.to_json())
+        users_list.append(user.to_json(user))
 
     return users_list
 
 
-def get_users_by_last_name(last_name: str) -> List[Users] or None:
+def get_users_by_last_name(last_name: str, user: 'Users') -> List[Users] or \
+                                                             None:
     """
     Gets all users with the same last name
+    :param user:
     :param last_name: sent last name
     :return: list of users or None
     """
@@ -90,7 +94,7 @@ def get_users_by_last_name(last_name: str) -> List[Users] or None:
         return None
 
     for user in users:
-        users_list.append(user.to_json())
+        users_list.append(user.to_json(user))
 
     return users_list
 
@@ -125,21 +129,21 @@ def get_user_by_username(username: str) -> Users or None:
     return user
 
 
-def get_followers(user: Users) -> List[Users] or None:
+def get_followers(user_follow: 'Users', user: 'Users') -> List[Users] or None:
     """
     Gets all users following current user
     :param: current user
     :return: list of users
     """
-    _id = str(user.pk)
+    _id = str(user_follow.pk)
     users = Users.objects(followed__followed=_id)
 
     if not users:
         return None
 
     users_list = []
-    for user in users:
-        users_list.append(user.to_json())
+    for item in users:
+        users_list.append(item.to_json(user))
 
     return users_list
 
@@ -194,20 +198,20 @@ def unsubscribe(user: Users, followed: Users) -> Users:
     return user
 
 
-def get_followed(user: Users) -> List[Users] or None:
+def get_followed(user_follow: 'Users', user: 'Users') -> List[Users] or None:
     """
     Gets all users followed current user
     :param: current user
     :return: list of users
     """
-    _id = str(user.pk)
+    _id = str(user_follow.pk)
     users = Users.objects(followers__followers=_id)
 
     if not users:
         return None
 
     users_list = []
-    for user in users:
-        users_list.append(user.to_json())
+    for item in users:
+        users_list.append(item.to_json(user))
 
     return users_list

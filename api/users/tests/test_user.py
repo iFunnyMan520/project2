@@ -40,20 +40,6 @@ def second_id(simple_user_2):
     return simple_user_2
 
 
-def test_get_users(user: UserClient):
-    response = user.get_users()
-
-    users = Users.objects()
-    users_array = []
-
-    for user in users:
-        users_array.append(user.to_json())
-
-    assert response.status_code == 200
-    assert {'users': users_array} == response.get_json()
-    assert len(response.get_json()['users']) == 8
-
-
 def test_sign_up(user: UserClient):
     response = user.invalid_data_sign_up(email, password)
 
@@ -82,6 +68,20 @@ def test_sign_up(user: UserClient):
     assert response.get_json()['message'] == 'User already exists'
 
 
+def test_get_users(user: UserClient):
+    response = user.get_users(token=token)
+
+    users = Users.objects()
+    users_array = []
+
+    for user in users:
+        users_array.append(user.to_json())
+
+    assert response.status_code == 200
+    assert {'users': users_array} == response.get_json()
+    assert len(response.get_json()['users']) == 9
+
+
 def test_me(user: UserClient):
 
     user_check = Users.objects(email=email).first()
@@ -93,13 +93,13 @@ def test_me(user: UserClient):
 
     response = user.me(test_token)
 
-    assert response.status_code == 404
-    assert response.get_json()['message'] == 'User could not be found'
+    assert response.status_code == 401
+    assert response.get_json()['message'] == 'User is not logged in'
 
     response = user.change_my_data(test_token, username, first_name, last_name)
 
-    assert response.status_code == 404
-    assert response.get_json()['message'] == 'User could not be found'
+    assert response.status_code == 401
+    assert response.get_json()['message'] == 'User is not logged in'
 
     response = user.change_my_data(token, username, first_name, last_name)
 
@@ -117,8 +117,8 @@ def test_me(user: UserClient):
 def test_delete_me(user: UserClient):
     response = user.delete_me(test_token)
 
-    assert response.get_json()['message'] == 'User could not be found'
-    assert response.status_code == 404
+    assert response.get_json()['message'] == 'User is not logged in'
+    assert response.status_code == 401
 
     response = user.delete_me(token)
 
@@ -192,6 +192,11 @@ def test_my_followed(user: UserClient, my_id, my_token, first_id, second_id):
 
     assert response.status_code == 200
     assert response.get_json()['message'] == 'You have subscribed now'
+
+    response = user.subscribe(my_token, '60538cb9fb3f12e6177389be')
+
+    assert response.status_code == 404
+    assert response.get_json()['message'] == 'User could not be found'
 
     response = user.followed(my_id)
 

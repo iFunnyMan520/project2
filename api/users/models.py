@@ -66,6 +66,12 @@ class Users(db.Document):
         user.save()
         return user
 
+    def is_followed(self, user: 'Users' = None):
+        if not self.followers or not user:
+            return False
+
+        return str(user.pk) in self.followers.followers
+
     def check_pass(self, password) -> bool:
         """
         Checks if the sent password matches the password in the database
@@ -75,7 +81,7 @@ class Users(db.Document):
         """
         return check_password_hash(self.password, password)
 
-    def to_json(self):
+    def to_json(self, user: 'Users' = None):
         return {
             '_id': str(self.pk),
             'first_name': self.first_name,
@@ -83,5 +89,6 @@ class Users(db.Document):
             'username': self.username,
             'email': self.email,
             'followers': self.followers,
-            'followed': self.followed
+            'followed': self.followed,
+            'is_followed': self.is_followed(user)
         }
