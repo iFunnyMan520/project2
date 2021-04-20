@@ -57,9 +57,13 @@ class Posts(db.Document):
         return len(self.views)
 
     def is_liked(self, user: 'Users'):
+        if not self.likes:
+            return False
         return str(user.pk) in self.likes.likes
 
     def is_viewed(self, user: 'Users'):
+        if not self.views:
+            return False
         return str(user.pk) in self.views.views
 
     @classmethod
@@ -106,10 +110,12 @@ class Posts(db.Document):
     def my_followed_posts(current: 'Users'):
         _id: str = str(current.pk)
 
-        posts: List['Posts'] = Posts.query(str(Posts.author.pk) in
-                                           current.followed.followed).order_by(
-            '-created_at'
-        )
+        if not current.followed:
+            return []
+
+        posts: List['Posts'] = Posts.objects(
+            author__in=current.followed.followed).order_by(
+            '-created_at')
 
         posts_list = []
 
@@ -168,7 +174,7 @@ class Posts(db.Document):
             'title': self.title,
             'description': self.description,
             'prev_description': self.prev_description,
-            'tags': self.tags,
+            'tags': [f'#{tag}' for tag in self.tags],
             'only_for_followers': self.only_for_followers,
             'created_at': self.created_at,
             'user_likes': self.likes,

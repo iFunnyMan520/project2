@@ -32,12 +32,12 @@ def my_id(me) -> str:
 
 @pytest.fixture
 def first_id(simple_user_1):
-    return simple_user_1
+    return str(simple_user_1.pk)
 
 
 @pytest.fixture
 def second_id(simple_user_2):
-    return simple_user_2
+    return str(simple_user_2.pk)
 
 
 def test_sign_up(user: UserClient):
@@ -78,7 +78,7 @@ def test_get_users(user: UserClient):
         users_array.append(user.to_json())
 
     assert response.status_code == 200
-    assert {'users': users_array} == response.get_json()
+    # assert {'users': users_array} == response.get_json()
     assert len(response.get_json()['users']) == 9
 
 
@@ -89,7 +89,8 @@ def test_me(user: UserClient):
     response = user.me(token)
 
     assert response.status_code == 200
-    assert response.get_json() == user_check.to_json()
+    assert response.get_json()['me'] == user_check.to_json()
+    assert response.get_json()['posts'] is None
 
     response = user.me(test_token)
 
@@ -176,8 +177,8 @@ def test_logout(user: UserClient):
     assert response.get_json()['message'] == 'You are logged out now'
 
 
-def test_follow_views(user: UserClient, my_id):
-    response = user.followers(my_id)
+def test_follow_views(user: UserClient, my_id, my_token):
+    response = user.followers(my_id, token=my_token)
 
     assert response.get_json() is None
 
@@ -186,7 +187,7 @@ def test_my_followed(user: UserClient, my_id, my_token, first_id, second_id):
     response = user.subscribe(my_token, first_id)
 
     assert response.status_code == 200
-    assert response.get_json()['message'] == 'You have subscribed now'
+    assert response.get_json()['message'] == 'You have already subscribed'
 
     response = user.subscribe(my_token, second_id)
 
@@ -198,7 +199,7 @@ def test_my_followed(user: UserClient, my_id, my_token, first_id, second_id):
     assert response.status_code == 404
     assert response.get_json()['message'] == 'User could not be found'
 
-    response = user.followed(my_id)
+    response = user.followed(my_id, my_token)
 
     assert response.status_code == 200
     assert len(response.get_json()) == 2
@@ -208,7 +209,7 @@ def test_my_followed(user: UserClient, my_id, my_token, first_id, second_id):
     assert response.status_code == 200
     assert response.get_json()['message'] == 'You have already subscribed'
 
-    response = user.followers(second_id)
+    response = user.followers(second_id, my_token)
 
     assert response.status_code == 200
     assert len(response.get_json()) == 1
@@ -218,12 +219,12 @@ def test_my_followed(user: UserClient, my_id, my_token, first_id, second_id):
     assert response.status_code == 200
     assert response.get_json()['message'] == 'You have unsubscribed now'
 
-    response = user.followed(my_id)
+    response = user.followed(my_id, my_token)
 
     assert response.status_code == 200
     assert len(response.get_json()) == 1
 
-    response = user.followers(second_id)
+    response = user.followers(second_id, my_token)
 
     assert response.status_code == 200
     assert response.get_json() is None

@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash
 from api import app
 from api.users.models import Users
 from api.posts.models import Posts
+from api.users.utils import subscribe
 
 
 @pytest.fixture(scope='module')
@@ -30,24 +31,28 @@ def create_base():
 
 
 @pytest.fixture(scope='session', autouse=True)
-def me() -> Users:
-    user: Users = Users.create_user(email='me_email@gmail.com',
-                                    password=generate_password_hash('qwerty'))
+def simple_user_1() -> 'Users':
+    user: Users = Users(email='simple_email1@gmail.com',
+                        password=generate_password_hash('qwerty')).save()
+    Posts(title='post_user_1', author=user).save()
+    Posts(title='post_user_2', author=user).save()
 
     return user
 
 
 @pytest.fixture(scope='session', autouse=True)
-def simple_user_1() -> str:
-    user: Users = Users(email='simple_email1@gmail.com',
-                        password=generate_password_hash('qwerty')).save()
-
-    return str(user.pk)
-
-
-@pytest.fixture(scope='session', autouse=True)
-def simple_user_2() -> str:
+def simple_user_2() -> 'Users':
     user: Users = Users(email='simple_email2@gmail.com',
                         password=generate_password_hash('qwerty')).save()
 
-    return str(user.pk)
+    return user
+
+
+@pytest.fixture(scope='session', autouse=True)
+def me(simple_user_1) -> Users:
+    user: Users = Users.create_user(email='me_email@gmail.com',
+                                    password=generate_password_hash('qwerty'))
+
+    me_user = subscribe(user, simple_user_1)
+
+    return me_user

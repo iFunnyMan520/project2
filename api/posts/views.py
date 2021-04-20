@@ -1,6 +1,5 @@
 from typing import List
 
-from bson import ObjectId
 from flask import jsonify, request
 from flasgger import SwaggerView
 from marshmallow import ValidationError
@@ -16,7 +15,7 @@ class PostsView(SwaggerView):
 
     @only_authorized
     def get(self, user: 'Users'):
-        posts: List['Posts'] = Posts.query().order_by('-created_at')
+        posts: List['Posts'] = Posts.objects().order_by('-created_at')
 
         posts_list = []
 
@@ -100,7 +99,7 @@ class LikeView(SwaggerView):
 
         post.like_post(user)
 
-        return jsonify({'is_liked': post.is_liked(user)})
+        return jsonify({'is_liked': post.is_liked(user), '_id': str(post.pk)})
 
     @only_authorized
     def delete(self, user: 'Users'):
@@ -116,7 +115,7 @@ class LikeView(SwaggerView):
 
         post.dislike_post(user)
 
-        return jsonify({'is_liked': post.is_liked(user)})
+        return jsonify({'is_liked': post.is_liked(user), '_id': str(post.pk)})
 
 
 class ViewPostView(SwaggerView):
@@ -135,4 +134,4 @@ class ViewPostView(SwaggerView):
 
         post.view_post(user)
 
-        return jsonify({'is_viewed': post.is_viewed(user)})
+        return jsonify({'is_viewed': post.is_viewed(user), '_id': str(post.pk)})
